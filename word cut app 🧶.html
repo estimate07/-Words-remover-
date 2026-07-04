@@ -1,0 +1,744 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C3 Pure Deletion Master</title>
+    <style>
+        :root {
+            --bg-main: #121214;
+            --bg-panel: #1a1a1e;
+            --bg-input: #26262b;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --accent-blue: #00e5ff;
+            --accent-green: #00e676;
+            --danger: #ff3366;
+            --danger-bg: rgba(255, 51, 102, 0.15);
+            --border: #2e2e35;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--text-main);
+        }
+
+        h2 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .panel-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea, .display-box {
+            width: 100%;
+            height: 350px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-main);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: none;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        textarea:focus {
+            outline: 1px solid var(--accent-blue);
+        }
+
+        .action-bar {
+            margin-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--accent-blue);
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(0, 229, 255, 0.1);
+        }
+
+        .btn-override-active {
+            background-color: var(--danger);
+            color: #fff;
+            border: 1px solid var(--danger);
+        }
+
+        .btn-edit-active {
+            background-color: var(--accent-green);
+            color: #000;
+            border: 1px solid var(--accent-green);
+        }
+
+        .controls-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .settings-panel {
+            display: none;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .settings-panel.visible {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-textarea {
+            height: 200px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-main);
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+
+        .search-input:focus {
+            outline: 1px solid var(--accent-blue);
+        }
+
+        .search-status {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-found {
+            color: var(--accent-green);
+        }
+
+        .status-not-found {
+            color: var(--danger);
+        }
+
+        .removed-inline {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+            text-decoration: line-through;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .dashboard {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .status-bar {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .status-active {
+            color: var(--accent-blue);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 4px;
+        }
+
+        .metric-card.highlighted .metric-val {
+            color: var(--accent-blue);
+        }
+
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        .cat-card {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 0.75rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .cat-val {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-top: 2px;
+        }
+
+        .log-section {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .log-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            background-color: var(--bg-input);
+            border-left: 3px solid var(--danger);
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .log-meta {
+            font-size: 0.75rem;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .log-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: var(--text-muted);
+        }
+
+        .log-details strong {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>C3 PURE DELETION MASTER</h1>
+        <div id="globalStatus" class="status-bar">STATUS STANDBY</div>
+    </header>
+
+    <div class="controls-section">
+        <button id="btnOverride" class="btn-secondary">CUSTOM BAN LIST OVERRIDE OFF</button>
+        <button id="btnEditDefault" class="btn-secondary">EDIT DEFAULT BAN LIST OFF</button>
+    </div>
+
+    <div id="panelOverride" class="settings-panel">
+        <h2>Custom Word Ban List Override</h2>
+        <textarea id="inputOverride" class="settings-textarea" placeholder="Paste your custom override list here separated by commas or newlines"></textarea>
+    </div>
+
+    <div id="panelEditDefault" class="settings-panel">
+        <h2>Edit Default Ban List Master Array</h2>
+        <div class="search-container">
+            <input type="text" id="inputSearch" class="search-input" placeholder="Search for a word or phrase to verify">
+            <div id="searchStatus" class="search-status">Total items 0</div>
+        </div>
+        <textarea id="inputDefaultMaster" class="settings-textarea" placeholder="Loading master array"></textarea>
+        <div class="action-bar">
+            <button id="btnApplyDefault">APPLY CHANGES OK</button>
+        </div>
+    </div>
+
+    <div class="panel-row">
+        <div class="panel">
+            <h2>Original Raw Script</h2>
+            <textarea id="rawInput" placeholder="Paste your dirty script here"></textarea>
+            <div class="action-bar">
+                <button id="btnProcess">PROCESS SCRIPT</button>
+            </div>
+        </div>
+        <div class="panel">
+            <h2>Cleaned Output Script</h2>
+            <div id="cleanOutput" class="display-box"></div>
+            <div class="action-bar">
+                <button id="btnCopy" class="btn-secondary">COPY TO CLIPBOARD</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Box 1 Original Text Placement Visual Cuts</h2>
+        <div id="visualCutsBox" class="display-box"></div>
+    </div>
+    
+    <div class="panel">
+        <h2>Box 2 Removed Words Collection</h2>
+        <div id="removedWordsBox" class="display-box" style="color: var(--danger);"></div>
+    </div>
+
+    <div class="dashboard">
+        <h2>Data Tracking Dashboard</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div>Initial Words</div>
+                <div id="metricInitial" class="metric-val">0</div>
+            </div>
+            <div class="metric-card">
+                <div>Final Words</div>
+                <div id="metricFinal" class="metric-val">0</div>
+            </div>
+            <div class="metric-card highlighted">
+                <div>Total Cuts Processed</div>
+                <div id="metricCuts" class="metric-val">0</div>
+            </div>
+            <div class="metric-card highlighted">
+                <div>Total Reduction</div>
+                <div id="metricReduction" class="metric-val">0%</div>
+            </div>
+            <div class="metric-card">
+                <div>Original Read Time</div>
+                <div id="metricOrigTime" class="metric-val">0 min 0 sec</div>
+            </div>
+            <div class="metric-card">
+                <div>New Read Time</div>
+                <div id="metricNewTime" class="metric-val">0 min 0 sec</div>
+            </div>
+        </div>
+
+        <h2>Category Breakdown</h2>
+        <div class="cat-grid">
+            <div class="cat-card">Cat 1 Vocab<div id="cat1" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 2 Cliché<div id="cat2" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 3 Bloat<div id="cat3" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 4 Filler<div id="cat4" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 5 Weakness<div id="cat5" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 6 Throat<div id="cat6" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 7 Announce<div id="cat7" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 8 Assume<div id="cat8" class="cat-val">0</div></div>
+            <div class="cat-card">Cat 9 Time<div id="cat9" class="cat-val">0</div></div>
+        </div>
+    </div>
+
+    <div class="log-section">
+        <h2>Detailed Deletion Log</h2>
+        <div id="logContainer" class="log-list">
+            <div style="color: var(--text-muted);">No items processed yet</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let overrideMode = false;
+    let editDefaultMode = false;
+
+    let MASTER_BAN_LIST = [
+        "It is important to note that", "Let us dive right in", "Only time will tell what the future holds",
+        "It goes without saying that", "At the end of the day", "This begs the question", "Without further ado",
+        "In today fast paced world", "Whether you are a beginner or a professional", "But wait there is more",
+        "Let us take a closer look", "This is where things get interesting", "As we navigate the complexities",
+        "It is a delicate balance between", "Here are a few things to keep in mind", "The possibilities are truly endless",
+        "In conclusion we can see that", "Let us unpack this step by step", "But that is not all",
+        "It is more important now than ever before", "There is no one size fits all solution", "Understanding this is the key to success",
+        "It is a testament to the power of", "Let us explore how this works", "The reality of the situation is much more complex",
+        "Taking a step back we can see that", "This serves as a stark reminder", "To put things into perspective",
+        "Let us break it down", "The implications of this are profound", "It is a game changer in every sense",
+        "As we look deeper into this topic", "It is worth pointing out that", "This raises some important considerations",
+        "We are living in unprecedented times", "It is easy to see why this is so popular", "Let us look at the bigger picture",
+        "This opens up a whole new world of possibilities", "Only by understanding the past can we predict the future",
+        "The truth is somewhere in the middle", "Throughout history", "Since time immemorial", "Picture this", "Imagine a", "What if", "The truth is", 
+        "Wait until you see", "Only time will tell", "The choice is yours", "Studies show", "Experts agree", "Research indicates",
+        "The truth of the matter is", "What we have to realize is", "It is interesting to note that", "We can all agree that",
+        "For all intents and purposes", "At this point in time", "In the grand scheme of things", "When all is said and done",
+        "As a matter of fact", "It should be mentioned that", "By and large", "For the most part", "It goes to show that",
+        "What this means is that", "In a manner of speaking", "To make a long story short", "With regards to",
+        "In the event that", "Due to the fact that", "Under the circumstances", "It has come to my attention",
+        "Allow me to explain", "Let me tell you", "I want to share", "I would like to point out", "We are going to discuss",
+        "Let us take a moment to", "I am here to tell you", "Let me show you", "I will go ahead and", "Allow us to demonstrate",
+        "Let me give you an example", "If you will bear with me", "I am going to explain", "As I will show you",
+        "Give me a second to", "I just want to say", "I am about to reveal", "Let us stop and think", "I need you to understand",
+        "Let me make it clear", "As we can see here", "You probably know", "As you can imagine", "It is easy to assume", "You may have noticed", "It is safe to say",
+        "You can clearly see", "Anyone can tell", "Most people believe", "We all know", "You have to wonder",
+        "It makes you think", "You are probably wondering", "It is common knowledge", "You might feel like",
+        "It is hard to imagine", "We can only guess", "You will quickly realize", "It stands to reason",
+        "You would be surprised", "As you might expect", "Throughout the day", "From time to time", "In the near future", "At the present moment", "Until the end of time",
+        "Sooner rather than later", "Day in and day out", "In a timely manner", "In the blink of an eye", "In this day and age",
+        "Year after year", "In the long run", "When the time comes", "For the time being", "From start to finish",
+        "Time and time again", "Around the clock", "Well", "Okay", "Now", "Anyway", "Moving on", "With that being said", "As I mentioned earlier", "Before we get started",
+        "In this video", "Today we are going to look at", "Watch until the end", "Let us begin", "As you can see on screen",
+        "Hit the subscribe button", "I think", "Maybe", "Probably", "Sort of", "Kind of", "It seems like", "In my opinion",
+        "Potentially", "Perhaps", "Right now", "Immediately", "Instantly", "Overnight", "Urgent", "Fast", "Rapidly", "Hurry",
+        "Quick", "Before it is too late", "Or rather", "Exactly", "angrily", "tapestry", "symphony", "dance", "realm", "beacon", "testament", "profound", "mosaic", "labyrinth", "landscape",
+        "cornerstone", "bedrock", "crucible", "echoes", "whispers", "journey", "vessel", "canvas", "masterclass",
+        "treasure trove", "paradigm", "kaleidoscope", "dawn", "horizon", "alchemy", "nexus", "odyssey", "microcosm",
+        "macrocosm", "mirage", "phantom", "fabric", "delve", "dive", "embark", "navigate", "unveil", "uncover",
+        "unlock", "explore", "traverse", "unravel", "illuminate", "demystify", "decode", "unearth", "spark", "ignite",
+        "forge", "pioneer", "foster", "cultivate", "harness", "leverage", "transcend", "catalyze", "intertwine",
+        "unpack", "peel back", "dissect", "intricate", "interplay", "bustling", "nuanced", "myriad", "pivotal",
+        "robust", "dynamic", "multifaceted", "seamless", "holistic", "synergistic", "comprehensive", "ever evolving",
+        "compelling", "ubiquitous", "indispensable", "overarching", "underlying", "quintessential", "undeniable",
+        "prominent", "paramount", "transformative", "imperative", "salient", "intrinsic", "extrinsic", "bespoke",
+        "vital", "crucial", "furthermore", "moreover", "ultimately", "essentially", "basically", "thus", "hence",
+        "nevertheless", "nonetheless", "conversely", "therefore", "however", "suddenly", "inherently", "intrinsically",
+        "ostensibly", "unequivocally", "arguably", "evidently", "consequently", "subsequently", "predictably",
+        "remarkably", "notably", "significantly", "interestingly", "ironically", "crucially", "apparently", "seemingly",
+        "invariably", "inevitably", "admitted", "predominantly", "proportionally", "respectively", "undoubtedly",
+        "purportedly", "fascinating", "incredible", "shocking", "groundbreaking", "revolutionary", "mind bending",
+        "astounding", "staggering", "unprecedented", "jaw dropping", "mind blowing", "breathtaking", "extraordinary",
+        "unbelievable", "captivating", "mesmerizing", "spellbinding", "miraculous", "heartbreaking", "tragically",
+        "horrifying", "terrifying", "awe inspiring", "poignant", "thrilling", "unimaginable", "agonizing", "chilling",
+        "unnerving", "sobering", "grim", "devastating", "earth shattering", "paradigm shifting", "phenomenal",
+        "monumental", "spectacular", "glorious", "majestic", "triumphant", "harrowing", "gut wrenching", "soul crushing",
+        "tear jerking", "heart stopping", "pulse pounding", "spine tingling", "bone chilling", "mind boggling",
+        "awe striking", "legendary", "mythical", "epic", "surreal", "uncanny", "bizarre", "mind numbing", "polarizing",
+        "deafening", "blinding", "piercing", "alarming", "disturbing", "unsettling", "ominous", "sinister", "visceral",
+        "raw", "unfiltered", "unapologetic", "literally", "simply", "just", "severe", "massively", "drastically",
+        "completely", "entirely", "absolutely", "totally", "utterly", "purely", "merely", "wholly", "fully",
+        "highly", "extremely", "incredibly", "deeply", "profoundly", "fundamentally", "strictly", "virtually",
+        "practically", "infinitely", "astronomically", "exponentially", "marginally", "slightly", "somewhat",
+        "rather", "quite", "thoroughly", "fiercely", "elevate", "empower", "optimize", "streamline", "supercharge",
+        "spearhead", "showcase", "utilize", "implement", "facilitate", "bolster", "amplify", "encapsulate",
+        "exemplify", "epitomize", "underscore", "highlight", "accentuate", "propel", "hallmark", "centerpiece",
+        "mainstay", "powerhouse", "trailblazer", "vanguard", "forefront", "epicenter", "crossroads", "pinnacle",
+        "zenith", "apex", "culmination", "fusion", "amalgamation", "resonate", "tackle", "align", "enrich"
+    ];
+
+    const btnOverride = document.getElementById('btnOverride');
+    const btnEditDefault = document.getElementById('btnEditDefault');
+    const panelOverride = document.getElementById('panelOverride');
+    const panelEditDefault = document.getElementById('panelEditDefault');
+    const inputDefaultMaster = document.getElementById('inputDefaultMaster');
+    const inputSearch = document.getElementById('inputSearch');
+    const searchStatus = document.getElementById('searchStatus');
+
+    inputDefaultMaster.value = MASTER_BAN_LIST.join(', ');
+    updateListCount();
+
+    function updateListCount() {
+        searchStatus.textContent = `Total items ${MASTER_BAN_LIST.length}`;
+        searchStatus.className = 'search-status';
+    }
+
+    btnOverride.addEventListener('click', () => {
+        overrideMode = !overrideMode;
+        if (overrideMode) {
+            btnOverride.textContent = "CUSTOM BAN LIST OVERRIDE ON";
+            btnOverride.classList.replace('btn-secondary', 'btn-override-active');
+            panelOverride.classList.add('visible');
+            if (editDefaultMode) btnEditDefault.click();
+        } else {
+            btnOverride.textContent = "CUSTOM BAN LIST OVERRIDE OFF";
+            btnOverride.classList.replace('btn-override-active', 'btn-secondary');
+            panelOverride.classList.remove('visible');
+        }
+    });
+
+    btnEditDefault.addEventListener('click', () => {
+        editDefaultMode = !editDefaultMode;
+        if (editDefaultMode) {
+            btnEditDefault.textContent = "EDIT DEFAULT BAN LIST ON";
+            btnEditDefault.classList.replace('btn-secondary', 'btn-edit-active');
+            panelEditDefault.classList.add('visible');
+            if (overrideMode) btnOverride.click();
+        } else {
+            btnEditDefault.textContent = "EDIT DEFAULT BAN LIST OFF";
+            btnEditDefault.classList.replace('btn-edit-active', 'btn-secondary');
+            panelEditDefault.classList.remove('visible');
+        }
+    });
+
+    inputSearch.addEventListener('input', () => {
+        const query = inputSearch.value.trim().toLowerCase();
+        if (!query) {
+            updateListCount();
+            return;
+        }
+
+        const matches = MASTER_BAN_LIST.filter(item => item.toLowerCase().includes(query));
+        if (matches.length > 0) {
+            searchStatus.innerHTML = `<span class="status-found">FOUND ${matches.length} match</span>`;
+        } else {
+            searchStatus.innerHTML = `<span class="status-not-found">NOT FOUND</span>`;
+        }
+    });
+
+    document.getElementById('btnApplyDefault').addEventListener('click', () => {
+        const rawList = inputDefaultMaster.value;
+        MASTER_BAN_LIST = rawList.split(/[,\n\r\t]+/).map(item => item.trim()).filter(item => item.length > 0);
+        inputSearch.value = '';
+        updateListCount();
+        const btn = document.getElementById('btnApplyDefault');
+        btn.textContent = "CHANGES APPLIED OK";
+        setTimeout(() => {
+            btn.textContent = "APPLY CHANGES OK";
+            btnEditDefault.click();
+        }, 1000);
+    });
+
+    document.getElementById('btnProcess').addEventListener('click', () => {
+        const rawText = document.getElementById('rawInput').value;
+        if (!rawText.trim()) return;
+
+        const originalWordsCount = countWords(rawText);
+        let processedText = rawText;
+        let removedItems = [];
+        let totalCuts = 0;
+        let catCounts = { cat1: 0, cat2: 0, cat3: 0, cat4: 0, cat5: 0, cat6: 0, cat7: 0, cat8: 0, cat9: 0 };
+
+        const protectedBlocks = [];
+        processedText = processedText.replace(/([\[\(][^\]\)]*[\]\)])/g, (match) => {
+            const token = `___PROT_${protectedBlocks.length}___`;
+            protectedBlocks.push({ token, original: match });
+            return token;
+        });
+
+        let activeBanList = overrideMode 
+            ? document.getElementById('inputOverride').value.split(/[,\n\r\t]+/).map(i => i.trim()).filter(i => i.length > 0)
+            : [...MASTER_BAN_LIST];
+
+        const sortedList = [...new Set(activeBanList)].sort((a, b) => b.length - a.length);
+
+        sortedList.forEach(banItem => {
+            if (!banItem.trim()) return;
+            const regex = new RegExp(`\\b${escapeRegExp(banItem)}\\b[\\s,]*`, 'gi');
+            
+            processedText = processedText.replace(regex, (match) => {
+                let assignedCat = 'cat1';
+                if (!overrideMode) {
+                    const len = banItem.length;
+                    if (len > 25) assignedCat = 'cat2';
+                    else if (['well', 'now', 'okay', 'maybe', 'probably'].includes(banItem.toLowerCase())) assignedCat = 'cat5';
+                    else if (banItem.toLowerCase().includes("history")) assignedCat = 'cat2';
+                    else if (banItem.toLowerCase().startsWith("let me")) assignedCat = 'cat7';
+                }
+
+                removedItems.push({ text: match.trim(), cat: assignedCat });
+                catCounts[assignedCat]++;
+                totalCuts++;
+                return ' ';
+            });
+        });
+
+        protectedBlocks.reverse().forEach(item => {
+            processedText = processedText.split(item.token).join(item.original);
+        });
+
+        let finalScript = processedText
+            .replace(/,\s*,/g, ',')
+            .replace(/\s+,/g, ',')
+            .replace(/ +/g, ' ')
+            .replace(/\n\s*\n+/g, '\n\n')
+            .trim();
+
+        const finalWordsCount = countWords(finalScript);
+        const reductionPercent = originalWordsCount > 0 ? Math.round(((originalWordsCount - finalWordsCount) / originalWordsCount) * 100) : 0;
+
+        document.getElementById('cleanOutput').textContent = finalScript;
+        document.getElementById('removedWordsBox').textContent = removedItems.map(i => i.text).join(', ');
+        
+        renderVisualCuts(rawText, sortedList);
+
+        document.getElementById('metricInitial').textContent = originalWordsCount;
+        document.getElementById('metricFinal').textContent = finalWordsCount;
+        document.getElementById('metricCuts').textContent = totalCuts;
+        document.getElementById('metricReduction').textContent = `${reductionPercent}%`;
+        document.getElementById('metricOrigTime').textContent = formatReadTime(originalWordsCount);
+        document.getElementById('metricNewTime').textContent = formatReadTime(finalWordsCount);
+
+        for (const key in catCounts) {
+            document.getElementById(key).textContent = catCounts[key];
+        }
+
+        renderLog(removedItems, rawText, finalScript);
+
+        const statusEl = document.getElementById('globalStatus');
+        statusEl.textContent = `STATUS PROTOCOL EXECUTED INITIAL ${originalWordsCount} FINAL ${finalWordsCount} CUTS ${totalCuts}`;
+        statusEl.classList.add('status-active');
+    });
+
+    document.getElementById('btnCopy').addEventListener('click', () => {
+        const text = document.getElementById('cleanOutput').textContent;
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        const btn = document.getElementById('btnCopy');
+        btn.textContent = "COPIED";
+        setTimeout(() => btn.textContent = "COPY TO CLIPBOARD", 2000);
+    });
+
+    function countWords(str) {
+        return str.trim().split(/\s+/).filter(w => w.length > 0).length;
+    }
+
+    function formatReadTime(words) {
+        const totalSecs = Math.round((words / 150) * 60);
+        const m = Math.floor(totalSecs / 60);
+        const s = totalSecs % 60;
+        return `${m} min ${s} sec`;
+    }
+
+    function escapeRegExp(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function renderVisualCuts(rawText, sortedList) {
+        const box = document.getElementById('visualCutsBox');
+        if (sortedList.length === 0) {
+            box.textContent = rawText;
+            return;
+        }
+        let htmlText = rawText;
+        sortedList.forEach(word => {
+            if (!word.trim()) return;
+            const regex = new RegExp(`\\b${escapeRegExp(word)}\\b[\\s,]*`, 'gi');
+            htmlText = htmlText.replace(regex, `<span class="removed-inline">${word}</span>`);
+        });
+        box.innerHTML = htmlText;
+    }
+
+    function renderLog(items, rawText, cleanText) {
+        const container = document.getElementById('logContainer');
+        container.innerHTML = '';
+        if (items.length === 0) {
+            container.innerHTML = '<div style="color: var(--text-muted);">Zero deletions made</div>';
+            return;
+        }
+
+        const map = new Map();
+        items.forEach(i => {
+            const key = i.text.toLowerCase();
+            if (!map.has(key)) map.set(key, { text: i.text, cat: i.cat, count: 0 });
+            map.get(key).count++;
+        });
+
+        let idx = 1;
+        map.forEach(data => {
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            const beforeSnippet = truncateText(rawText, data.text);
+            const afterSnippet = truncateText(cleanText, data.text, true);
+
+            div.innerHTML = `
+                <div class="log-meta">CUT ${String(idx).padStart(2, '0')} CATEGORY ${data.cat.toUpperCase()}</div>
+                <div class="log-details">
+                    <div><strong>Removed</strong> ${data.text} Processed ${data.count}x</div>
+                    <div><strong>Before</strong> ${beforeSnippet}</div>
+                    <div><strong>After</strong> ${afterSnippet}</div>
+                </div>
+            `;
+            container.appendChild(div);
+            idx++;
+        });
+    }
+
+    function truncateText(text, term, isCleaned = false) {
+        if (isCleaned) return "Cleaned Structure Verified Element Removed";
+        const idx = text.toLowerCase().indexOf(term.toLowerCase());
+        if (idx === -1) return "Context baseline unavailable";
+        const start = Math.max(0, idx - 30);
+        const end = Math.min(text.length, idx + term.length + 30);
+        return text.slice(start, end).replace(/\n/g, ' ').trim();
+    }
+</script>
+
+</body>
+</html>
